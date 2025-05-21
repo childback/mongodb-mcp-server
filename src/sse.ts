@@ -31,16 +31,22 @@ const server = new Server({
     userConfig: config,
 });
 
+server.register();
+
 app.get('/sse', async (req: Request, res: Response) => {
     console.log('Received GET request to /sse (establishing SSE stream)');
+    console.log(`Received GET request from ${req.ip}`);
     try {
         const transport = new SSEServerTransport('/messages', res);
         const sessionId = transport.sessionId;
         transports[sessionId] = transport;
-        transport.onclose = () => {
-          console.log(`SSE transport closed for session ${sessionId}`);
-          delete transports[sessionId];
-        };
+        //transport.onclose = () => {
+        //  console.log(`SSE transport closed for session ${sessionId}`);
+        //  delete transports[sessionId];
+        //};
+        res.on("close", () => {
+            delete transports[sessionId];
+        });
         await server.connect(transport);
         console.log(`Established SSE stream with session ID: ${sessionId}`);
     } catch (error) {
@@ -67,6 +73,7 @@ app.post('/messages', async (req: Request, res: Response) => {
     }
     try {
         await transport.handlePostMessage(req, res, req.body);
+        console.log(`send response: ${res.getHeaderNames()}`)
     } catch (error) {
         console.error('Error handling request:', error);
         if (!res.headersSent) {
@@ -76,10 +83,11 @@ app.post('/messages', async (req: Request, res: Response) => {
 });
 
 const PORT = 6005;
-app.listen(PORT, () => {
+const appServer =  app.listen(PORT, () => {
   console.log(`Simple SSE Server (deprecated protocol version 2024-11-05) listening on port ${PORT}`);
   console.log(`Simple SSE Server Config ${config.connectionString} ${config.connectOptions}`);
 });
+appServer.keepAliveTimeout = 60000;
 
 // Handle server shutdown
 process.on('SIGINT', async () => {

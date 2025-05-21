@@ -34,11 +34,22 @@ export class Server {
         this.userConfig = userConfig;
     }
 
-    async connect(transport: Transport): Promise<void> {
+    async register() {
         this.mcpServer.server.registerCapabilities({ logging: {} });
-
         this.registerTools();
         this.registerResources();
+    }
+
+    async connect(transport: Transport): Promise<void> {
+        try {
+            console.log("Register tools!")
+            //this.mcpServer.server.registerCapabilities({ logging: {} });
+            //this.registerTools();
+            //this.registerResources();
+        }catch (error) {
+            console.error("Failed to register: ",error);
+        }
+
 
         // This is a workaround for an issue we've seen with some models, where they'll see that everything in the `arguments`
         // object is optional, and then not pass it at all. However, the MCP server expects the `arguments` object to be if

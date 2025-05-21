@@ -47,6 +47,7 @@ try {
             });
     });
 
+    server.register()
     await server.connect(transport);
 } catch (error: unknown) {
     logger.emergency(LogId.serverStartFailure, "server", `Fatal error running server: ${error as string}`);
